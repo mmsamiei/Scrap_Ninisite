@@ -16,7 +16,7 @@ class NiniSpider(scrapy.Spider):
         i = 0 
         for category_link in categories_link:
             i = i + 1
-            if i < 2:
+            if i < 3:
                 category_absolute_link = response.urljoin(category_link)
                 yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page)
 
