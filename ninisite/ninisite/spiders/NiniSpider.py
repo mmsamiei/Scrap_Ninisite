@@ -28,11 +28,13 @@ class NiniSpider(scrapy.Spider):
 
     def parse_topic_page(self, response):
         topic_title = response.xpath('//*[contains(@class, "topic-title")]/a/text()').extract_first() 
-        topic_message = response.xpath('//*[contains(@class, "post-message")]/p/text()').extract_first()
+        #topic_message = response.xpath('//*[contains(@class, "post-message")]/p/text()').extract_first()
+        main_post_message = response.xpath('//*[contains(@class, "post-message")]')[0]
+        main_post_message_text = ' '.join(main_post_message.xpath('./p/text()').extract())
         topic_url = response.request.url
         yield{
             'title': topic_title,
-            'body': topic_message,
+            'body': main_post_message_text,
             'url': topic_url
         }
         
