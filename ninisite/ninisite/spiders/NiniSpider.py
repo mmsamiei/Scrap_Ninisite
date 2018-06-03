@@ -21,8 +21,9 @@ class NiniSpider(scrapy.Spider):
                 yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page)
 
     def parse_category_page(self, response):
-        topic_subjects = response.xpath('//*[@class="topic_subject"]/text()').extract()
-        for topic_subject in topic_subjects:
+        topic_titles = response.xpath('//*[contains(@class, "topic--title")]/span/text()').extract()
+        topic_links = response.xpath('//*[contains(@class, "topic--title")]/../@href').extract()
+        for topic_title in topic_titles:
             print("\n")
-            print(topic_subject)
+            print(topic_title)
             print("\n")
