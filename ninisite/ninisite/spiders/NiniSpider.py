@@ -27,7 +27,7 @@ class NiniSpider(scrapy.Spider):
             yield scrapy.Request(url=topic_absolute_link, callback=self.parse_topic_page)
 
     def parse_topic_page(self, response):
-        topic_title = response.xpath('//*[contains(@class, "topic-title")]/a/text()').extract() 
+        topic_title = response.xpath('//*[contains(@class, "topic-title")]/a/text()').extract_first() 
         topic_message = response.xpath('//*[contains(@class, "post-message")]/p/text()').extract_first()
         topic_url = response.request.url
         yield{
