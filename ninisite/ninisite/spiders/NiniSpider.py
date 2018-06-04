@@ -23,19 +23,23 @@ class NiniSpider(scrapy.Spider):
         i = 0 
         for category_link in categories_link:
             i = i + 1
-            if i < 3:
+            if i < 2:
                 category_absolute_link = response.urljoin(category_link)
                 yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page)
 
     def parse_category_page(self, response):
         topic_links = response.xpath('//*[contains(@class, "topic--title")]/../@href').extract()
-        first_topic_absolute_link = response.urljoin(topic_links[0])
-        is_old = self.collection.find({'url':first_topic_absolute_link}).count()
-        if is_old != 0:
-            for topic_link in topic_links:
-                topic_absolute_link = response.urljoin(topic_link)
-                yield scrapy.Request(url=topic_absolute_link, callback=self.parse_topic_page)
-                #TODO go to next page!
+        for topic_link in topic_links:
+            topic_absolute_link = response.urljoin(topic_link)
+            yield scrapy.Request(url=topic_absolute_link, callback=self.parse_topic_page)
+
+        next_page_link = response.xpath('//*[contains(@class, "page-link")][@title="Next page"]/@href').extract_first()
+        if next_page_link is not None:
+            next_page_absolute_link = response.urljoin(next_page_link)
+            print(next_page_absolute_link)
+            yield scrapy.Request(url=next_page_absolute_link, callback=self.parse_category_page)
+        
+
 
     def parse_topic_page(self, response):
         topic_title = response.xpath('//*[contains(@class, "topic-title")]/a/text()').extract_first() 
