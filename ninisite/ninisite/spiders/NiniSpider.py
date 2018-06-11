@@ -20,12 +20,9 @@ class NiniSpider(scrapy.Spider):
 
     def parse_homepage(self, response):
         categories_link = response.xpath('//*[@class="category--title"]/@href').extract()
-        i = 0 
         for category_link in categories_link:
-            i = i + 1
-            if i < 2:
-                category_absolute_link = response.urljoin(category_link)
-                yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page)
+            category_absolute_link = response.urljoin(category_link)
+            yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page, meta={'page_number': 1})
 
     def parse_category_page(self, response):
         topic_links = response.xpath('//*[contains(@class, "topic--title")]/../@href').extract()
@@ -34,12 +31,10 @@ class NiniSpider(scrapy.Spider):
             yield scrapy.Request(url=topic_absolute_link, callback=self.parse_topic_page)
 
         next_page_link = response.xpath('//*[contains(@class, "page-link")][@title="Next page"]/@href').extract_first()
-        if next_page_link is not None:
+        if next_page_link is not None and response.meta['page_number'] < 4:
             next_page_absolute_link = response.urljoin(next_page_link)
-            print(next_page_absolute_link)
-            yield scrapy.Request(url=next_page_absolute_link, callback=self.parse_category_page)
+            yield scrapy.Request(url=next_page_absolute_link, callback=self.parse_category_page, meta={'page_number': response.meta['page_number']+1})
         
-
 
     def parse_topic_page(self, response):
         topic_title = response.xpath('//*[contains(@class, "topic-title")]/a/text()').extract_first() 
