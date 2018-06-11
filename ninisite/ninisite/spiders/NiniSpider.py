@@ -1,7 +1,7 @@
 import scrapy
 from pymongo import MongoClient
 from scrapy.conf import settings
-
+import time
 
 class NiniSpider(scrapy.Spider):
     name = "NiniSpider"
@@ -15,6 +15,8 @@ class NiniSpider(scrapy.Spider):
         urls = [
             'https://www.ninisite.com/discussion/'
         ]
+        short_term_topics = 'https://www.ninisite.com/discussion/topics'
+        yield scrapy.Request(url=short_term_topics, callback=self.short_term_page)
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_homepage)
 
@@ -23,6 +25,21 @@ class NiniSpider(scrapy.Spider):
         for category_link in categories_link:
             category_absolute_link = response.urljoin(category_link)
             yield scrapy.Request(url=category_absolute_link, callback=self.parse_category_page, meta={'page_number': 1})
+
+    def short_term_page(self, response):
+        topic_links = response.xpath('//*[contains(@class, "topic--title")]/../@href').extract()
+        for topic_link in topic_links:
+            topic_absolute_link = response.urljoin(topic_link)
+            if self.collection.find_one({'url':topic_absolute_link}) is None:
+                yield scrapy.Request(url=topic_absolute_link, callback=self.parse_topic_page)
+            else:
+                return
+        next_page_link = response.xpath('//*[contains(@class, "page-link")][@title="Next page"]/@href').extract_first()
+        if next_page_link is not None:
+            next_page_absolute_link = response.urljoin(next_page_link)
+            yield scrapy.Request(url=next_page_absolute_link, callback=self.short_term_page)
+
+
 
     def parse_category_page(self, response):
         topic_links = response.xpath('//*[contains(@class, "topic--title")]/../@href').extract()
